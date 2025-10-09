@@ -1,6 +1,6 @@
 package com.project.userservice.global.jwt;
 
-import com.project.userservice.global.exception.AuthErrorCode;
+import com.project.userservice.auth.exception.AuthErrorCode;
 import com.project.userservice.global.exception.CustomException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

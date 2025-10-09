@@ -1,4 +1,4 @@
-package com.project.userservice.entity;
+package com.project.userservice.user.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.project.userservice.global.BaseTimeEntity;
@@ -18,22 +18,22 @@ public class User extends BaseTimeEntity {
   private Long id;
 
   @Column(name = "username", nullable = false)
-  private String username;
+  private String username; // 사용자 아아디
 
   @JsonIgnore
   @Column(name = "password", nullable = false)
-  private String password;
+  private String password; // 사용자 비밀번호
 
   @JsonIgnore
   @Column(name = "refresh_token")
-  private String refreshToken;
+  private String refreshToken; // 리프레쉬 토큰
 
   @Column(name = "role", nullable = false)
   @Enumerated(EnumType.STRING)
   @Builder.Default
   private Role role = Role.USER;
 
-  public void createRefreshToken(String refreshToken) {
+  public void saveRefreshToken(String refreshToken) {
     this.refreshToken = refreshToken;
   }
 }
