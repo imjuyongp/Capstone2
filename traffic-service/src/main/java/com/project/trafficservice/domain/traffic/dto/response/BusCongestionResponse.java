@@ -14,4 +14,7 @@ public class BusCongestionResponse {
 
     @Schema(description = "혼잡도")
     private Congestion congestion;
+
+    @Schema(description = "혼잡도 설명")
+    private String description;
 }

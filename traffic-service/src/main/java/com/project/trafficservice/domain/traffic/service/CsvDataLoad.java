@@ -20,13 +20,14 @@ import java.util.Optional;
 @Slf4j
 public class CsvDataLoad {
 
-    private static final String CSV_PATH = "/Users/parkjuyong/Desktop/4-1/Capstone/mlp_model/assets/09월_승하차인원별_혼잡도.csv";
+    private static final String CSV_PATH = "/Users/parkjuyong/Desktop/4-1/Capstone/capstone2/traffic-service/src/main/java/com/project/trafficservice/domain/traffic/assets/09월_승하차인원별_혼잡도.csv";
     private Map<String, BusCongestionData> dataCache = new HashMap<>();
 
     // 어플리케이션 시작 시 csv 파일 로드
     @PostConstruct // 스프링 빈이 생성되고 의존성 주입이 모두 끝난 후 딱 한번만 실행되도록 해주는 어노테이션
     public void loadCsvData() {
         log.info("csv 데이터 로딩 시작");
+        long startTime = System.currentTimeMillis();
 
         try (CSVReader reader = new CSVReader(new FileReader(CSV_PATH))) {
             List<String[]> rows = reader.readAll(); // CSV 파일의 모든 행을 한 번에 읽어서 List<String[]> 로 반환
@@ -55,7 +56,9 @@ public class CsvDataLoad {
                 dataCache.put(key, data);
             }
 
-            log.info("CSV 데이터 로딩 완료!");
+            long endTime = System.currentTimeMillis();
+            log.info("CSV 데이터 로딩 완료! 총 {}개, 소요 시간: {}ms",
+                dataCache.size(), (endTime - startTime));
 
         } catch (IOException | CsvException e) {
             log.error("CSV 파일 로딩 실패", e);
