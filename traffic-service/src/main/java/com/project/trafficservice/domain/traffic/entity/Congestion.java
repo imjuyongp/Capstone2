@@ -1,9 +1,7 @@
 package com.project.trafficservice.domain.traffic.entity;
 
-import com.project.trafficservice.domain.traffic.dto.BusCongestionData;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 @Getter
 @RequiredArgsConstructor
