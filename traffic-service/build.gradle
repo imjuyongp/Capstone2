@@ -19,4 +19,7 @@ dependencies {
 
     // Swagger openapi-ui
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.1'
+
+    // file
+    implementation 'com.opencsv:opencsv:5.7.1'
 }
