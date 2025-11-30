@@ -61,7 +61,7 @@ jobs:
       # 2. .env 파일 생성
       - name: Create .env file
         run: |
-          echo "${{ secrets.ENV_TRAFFIC }}" > .env
+          echo "${{ secrets.ENV_EUREKA }}" > .env
 
       # 3. 배포 디렉토리 설정
       - name: Setup deployment directory
@@ -71,7 +71,7 @@ jobs:
           mkdir -p $HOME/capstone
           cp docker-compose.yml $HOME/capstone/
           cp .env $HOME/capstone/
-
+          
       # 4. Docker 배포 실행
       - name: Deploy with Docker
         run: |
