@@ -5,5 +5,5 @@ plugins {
 rootProject.name = 'capstone'
 
 include 'user-service'
-include 'community-service'
 include 'traffic-service'
+include 'eureka'
