@@ -36,7 +36,7 @@ public class SwaggerConfig {
                         .bearerFormat("JWT")))*/
         .info(new Info().title("Swagger API 명세서")
             .version("1.0")
-            .description("사용설명서 챗봇 빌더"));
+            .description("캡스톤 설계2"));
   }
 
   @Bean

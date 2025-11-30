@@ -4,13 +4,14 @@ import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
 import com.project.trafficservice.domain.traffic.entity.BusCongestionData;
 import com.project.trafficservice.domain.traffic.repository.BusCongestionRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -23,11 +24,14 @@ import java.util.List;
 public class CsvDataLoad implements ApplicationRunner {
 
     private static final String CSV_PATH = "/Users/parkjuyong/Desktop/4-1/Capstone/capstone2/traffic-service/src/main/java/com/project/trafficservice/domain/traffic/assets/09월_승하차인원별_혼잡도.csv";
+    private static final int BATCH_SIZE = 1000;
+
     private final BusCongestionRepository repository;
+    private final EntityManager entityManager;
+    private final TransactionTemplate transactionTemplate;
 
     @Override
-    @Async // 비동기로 별도의 메소드 풀에서 실행되도록 함
-    @Transactional
+    @Async // 비동기로 별도의 스레드 풀에서 실행되도록 함
     public void run(ApplicationArguments args) {
         loadCsvData();
     }
@@ -45,7 +49,11 @@ public class CsvDataLoad implements ApplicationRunner {
 
         try (CSVReader reader = new CSVReader(new FileReader(CSV_PATH))) {
             List<String[]> rows = reader.readAll();
-            List<BusCongestionData> dataList = new ArrayList<>();
+            int totalRows = rows.size() - 1; // 헤더 제외
+            log.info("총 {}개의 데이터를 처리합니다.", totalRows);
+
+            List<BusCongestionData> dataList = new ArrayList<>(BATCH_SIZE);
+            int processedCount = 0;
 
             for(int i=1; i<rows.size(); i++) { // 0행은 헤더이므로 스킵
                 String[] row = rows.get(i);
@@ -69,30 +77,46 @@ public class CsvDataLoad implements ApplicationRunner {
 
                 dataList.add(data);
 
-                // 배치 저장 (1000개씩)
-                if (dataList.size() >= 1000) {
-                    repository.saveAll(dataList);
+                // 배치 저장 (BATCH_SIZE개씩, 트랜잭션 분리 + 메모리 관리)
+                if (dataList.size() >= BATCH_SIZE) {
+                    saveBatch(dataList);
+                    processedCount += dataList.size();
                     dataList.clear();
 
                     // 10000개마다 로그 출력
-                    if (i % 10000 == 0) {
-                        log.info("CSV 로딩 진행 중: {}개 처리됨", i);
+                    if (processedCount % 10000 == 0) {
+                        double progress = (processedCount * 100.0) / totalRows;
+                        log.info("CSV 로딩 진행 중: {}/{}개 ({}%)",
+                            processedCount, totalRows, String.format("%.1f", progress));
                     }
                 }
             }
 
             // 나머지 데이터 저장
             if (!dataList.isEmpty()) {
-                repository.saveAll(dataList);
+                saveBatch(dataList);
+                processedCount += dataList.size();
             }
 
             long endTime = System.currentTimeMillis();
-            log.info("CSV 데이터 로딩 완료! 총 {}개, 소요 시간: {}ms",
-                repository.count(), (endTime - startTime));
+            long seconds = (endTime - startTime) / 1000;
+            log.info("CSV 데이터 로딩 완료! 총 {}개, 소요 시간: {}초 ({}분 {}초)",
+                processedCount, seconds, seconds / 60, seconds % 60);
 
         } catch (IOException | CsvException e) {
             log.error("CSV 파일 로딩 실패", e);
             throw new RuntimeException("CSV 데이터 로드 실패", e);
         }
+    }
+
+    // 배치 단위로 트랜잭션 분리하여 저장 (메모리 효율)
+    private void saveBatch(List<BusCongestionData> dataList) {
+        transactionTemplate.executeWithoutResult(status -> {
+            for (BusCongestionData data : dataList) {
+                entityManager.persist(data);
+            }
+            entityManager.flush();
+            entityManager.clear(); // 1차 캐시 클리어로 메모리 관리
+        });
     }
 }
