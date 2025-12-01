@@ -51,7 +51,7 @@ jobs:
 
   # 2단계: 배포
   deploy:
-    runs-on: self-hosted
+    runs-on: [self-hosted, eureka-server]
     needs: build  # build job이 끝난 뒤 실행됨
     steps:
       # 1. 레포지토리 재체크아웃
